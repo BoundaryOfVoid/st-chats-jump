@@ -1,8 +1,52 @@
-// 宣告當前定位的訊息索引
+// 1. 將樣式直接寫入 JS，確保一定會被載入
+const css = `
+#st-chats-jump-container {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 99999; /* 調高層級，確保不會被酒館的背景或選單遮擋 */
+}
+#st-chats-jump-container button {
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    font-size: 20px;
+    cursor: pointer;
+    background-color: rgba(30, 30, 30, 0.8);
+    color: #ffffff;
+    border: 1px solid #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+#st-chats-jump-container button:hover {
+    background-color: rgba(80, 80, 80, 0.8);
+}
+`;
+
+// 2. 強制注入 CSS 到網頁中
+const style = document.createElement('style');
+style.innerHTML = css;
+document.head.appendChild(style);
+
+// 3. 建立並插入按鈕 UI
+const jumpContainer = document.createElement('div');
+jumpContainer.id = 'st-chats-jump-container';
+jumpContainer.innerHTML = `
+    <button id="jump-up-btn" title="上一則">▲</button>
+    <button id="jump-down-btn" title="下一則">▼</button>
+`;
+document.body.appendChild(jumpContainer);
+
+// 4. 跳轉邏輯
 let currentIndex = -1;
 
 function getMessages() {
-    // 酒館的訊息區塊預設會帶有 .mes 這個 class
     return Array.from(document.querySelectorAll('.mes'));
 }
 
@@ -11,14 +55,13 @@ function jumpToMessage(direction) {
     if (messages.length === 0) return;
     const chatContainer = document.getElementById('chat');
 
-    // 如果使用者手動捲動過，或者還沒開始按，就重新計算目前最靠近畫面上方的訊息是哪一則
+    // 重新計算目前最靠近畫面上方的訊息
     if (currentIndex < 0 || currentIndex >= messages.length) {
         let closest = 0;
         let minDistance = Infinity;
         
         messages.forEach((mes, index) => {
             const rect = mes.getBoundingClientRect();
-            // 找出距離視窗頂部最近的區塊
             const distance = Math.abs(rect.top);
             if (distance < minDistance) {
                 minDistance = distance;
@@ -30,48 +73,35 @@ function jumpToMessage(direction) {
 
     if (direction === 'up') {
         currentIndex--;
-        // 當索引小於 0，代表已經按到目前載入的最頂端一則
         if (currentIndex < 0) {
             if (chatContainer) {
-                // 強制將對話框捲動到最上面，這會直接觸發酒館內建的載入歷史紀錄功能
+                // 強制捲動到頂端，觸發歷史紀錄載入
                 chatContainer.scrollTop = 0;
             }
-            // 重置索引。下次點擊時會重新掃描新載入的 DOM
             currentIndex = -1;
             return;
         }
     } else if (direction === 'down') {
         currentIndex++;
         if (currentIndex >= messages.length) {
-            currentIndex = messages.length - 1; // 鎖定在最底端
+            currentIndex = messages.length - 1;
         }
     }
 
-    // 執行平滑跳轉至目標訊息
+    // 執行跳轉
     if (messages[currentIndex]) {
         messages[currentIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 }
 
-jQuery(async () => {
-    // 建立懸浮按鈕 UI
-    const jumpContainer = document.createElement('div');
-    jumpContainer.id = 'st-chats-jump-container';
-    jumpContainer.innerHTML = `
-        <button id="jump-up-btn" class="menu_button" title="上一則">▲</button>
-        <button id="jump-down-btn" class="menu_button" title="下一則">▼</button>
-    `;
-    document.body.appendChild(jumpContainer);
+// 5. 綁定按鈕事件
+document.getElementById('jump-up-btn').addEventListener('click', () => jumpToMessage('up'));
+document.getElementById('jump-down-btn').addEventListener('click', () => jumpToMessage('down'));
 
-    // 綁定點擊事件
-    document.getElementById('jump-up-btn').addEventListener('click', () => jumpToMessage('up'));
-    document.getElementById('jump-down-btn').addEventListener('click', () => jumpToMessage('down'));
-
-    // 監聽對話框的滾動事件。如果使用者手動滑動滑鼠滾輪，就重置索引，避免下次點擊時亂跳
-    const chatContainer = document.getElementById('chat');
-    if (chatContainer) {
-        chatContainer.addEventListener('scroll', () => {
-            currentIndex = -1;
-        }, { passive: true });
+// 6. 監聽對話框滾動，重置索引
+// 使用 capture 確保能抓到酒館動態生成的 #chat 容器事件
+window.addEventListener('scroll', (e) => {
+    if (e.target && e.target.id === 'chat') {
+        currentIndex = -1;
     }
-});
+}, { passive: true, capture: true });

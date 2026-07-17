@@ -1,0 +1,7 @@
+{
+    "name": "ST Chats Jump",
+    "description": "提供懸浮按鈕，可單則上下跳轉對話，並在頂端自動觸發歷史紀錄載入。",
+    "version": "1.0.0",
+    "author": "Gemini AI",
+    "main": "index.js"
+}

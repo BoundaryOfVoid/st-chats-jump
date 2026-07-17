@@ -1,4 +1,4 @@
-console.log('[st-chats-jump] 腳本已更新：修正長對話閱讀視角 (改為對齊頂端)！');
+console.log('[st-chats-jump] 腳本已更新：無狀態視覺運算 + 智慧長文錨點 + 強制精準定位');
 
 const jumpContainer = document.createElement('div');
 jumpContainer.id = 'st-chats-jump-container';
@@ -9,65 +9,61 @@ jumpContainer.innerHTML = `
 `;
 document.body.appendChild(jumpContainer);
 
-let currentMesId = null;
-
 function jumpToMessage(direction) {
     const chatContainer = document.getElementById('chat');
     if (!chatContainer) return;
 
-    // 1. 獲取當下「真正可見」且帶有 ID 的所有對話區塊
+    // 1. 取得畫面上所有可見且帶有 ID 的對話區塊
     const visibleMessages = Array.from(document.querySelectorAll('.mes')).filter(m => m.offsetParent !== null && m.hasAttribute('mesid'));
     if (visibleMessages.length === 0) return;
 
-    // 2. 尋找當前紀錄的 ID 位於陣列中的哪一個位置
-    let currentIndex = -1;
-    if (currentMesId !== null) {
-        currentIndex = visibleMessages.findIndex(m => m.getAttribute('mesid') === currentMesId);
+    // 2. 獲取聊天視窗的「物理頂端座標」 (加上 10px 緩衝區，排除邊框干擾)
+    const chatRect = chatContainer.getBoundingClientRect();
+    const viewTop = chatRect.top + 10; 
+
+    // 3. 找出「當前肉眼正在閱讀」的對話
+    // 邏輯：從上往下遍歷，找出最後一個「頂部座標高於或貼齊視窗頂端」的區塊
+    let currentIndex = 0;
+    for (let i = 0; i < visibleMessages.length; i++) {
+        const rect = visibleMessages[i].getBoundingClientRect();
+        if (rect.top <= viewTop) {
+            currentIndex = i;
+        } else {
+            break; // 找到第一個低於視窗的區塊就停止
+        }
     }
 
-    // 3. 重新計算基準點：物理視覺鎖定
-    if (currentIndex === -1) {
-        const windowCenter = window.innerHeight / 2;
-        
-        visibleMessages.forEach((mes, index) => {
-            const rect = mes.getBoundingClientRect();
-            if (rect.top < windowCenter) {
-                currentIndex = index;
-            }
-        });
-        
-        if (currentIndex === -1) currentIndex = 0;
-    }
+    let targetIndex = currentIndex;
+    const currentRect = visibleMessages[currentIndex].getBoundingClientRect();
 
-    // 4. 根據陣列索引往上或往下
+    // 4. 符合人類直覺的跳轉邏輯
     if (direction === 'up') {
-        currentIndex--;
-    } else {
-        currentIndex++;
+        // 【智慧長文錨點】
+        // 如果當前對話的頂端被推到視窗上方超過 50px (代表你正處於長文的深處)
+        // 按「上一則」必須先回到『這則對話的最頂端』，而不是直接跳到上一樓。
+        if (currentRect.top < viewTop - 50) {
+            targetIndex = currentIndex;
+        } else {
+            targetIndex = currentIndex - 1; // 已經在頂部，才真正跳往上一樓
+        }
+    } else if (direction === 'down') {
+        targetIndex = currentIndex + 1;
     }
 
-    // 5. 執行跳轉與邊界處理，將 block: 'center' 全數改為 block: 'start'
-    if (currentIndex < 0) {
-        chatContainer.scrollTop = 0; 
-        currentMesId = null;
-    } else if (currentIndex >= visibleMessages.length) {
-        currentIndex = visibleMessages.length - 1; 
-        visibleMessages[currentIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
-        currentMesId = visibleMessages[currentIndex].getAttribute('mesid');
+    // 5. 執行跳轉與邊界防呆
+    if (targetIndex < 0) {
+        chatContainer.scrollTop = 0; // 置頂載入歷史
+    } else if (targetIndex >= visibleMessages.length) {
+        targetIndex = visibleMessages.length - 1;
+        // 改用 behavior: 'auto' (瞬間跳轉)，達到與 Console 測試相同的 100% 精準度
+        visibleMessages[targetIndex].scrollIntoView({ behavior: 'auto', block: 'start' });
     } else {
-        visibleMessages[currentIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
-        currentMesId = visibleMessages[currentIndex].getAttribute('mesid');
+        visibleMessages[targetIndex].scrollIntoView({ behavior: 'auto', block: 'start' });
     }
 }
 
 document.getElementById('jump-up-btn').addEventListener('click', () => jumpToMessage('up'));
 document.getElementById('jump-down-btn').addEventListener('click', () => jumpToMessage('down'));
-
-window.addEventListener('scroll', (e) => {
-    if (e.target && e.target.id === 'chat') {
-        currentMesId = null;
-    }
-}, { passive: true, capture: true });
 
 // 拖拉邏輯
 const handle = document.getElementById('drag-handle');

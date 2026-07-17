@@ -1,7 +1,7 @@
 {
     "name": "st-chats-jump",
     "display_name": "ST Chats Jump",
-    "author": "BoundaryOfVoid",
+    "author": "BoundaryOfVoid use Gemini AI",
     "version": "1.0.2",
     "description": "單則上下跳轉對話按鈕",
     "js": "index.js",

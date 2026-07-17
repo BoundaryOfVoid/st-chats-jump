@@ -1,3 +1,5 @@
+console.log('[st-chats-jump] 腳本已被酒館讀取並開始執行！');
+
 // 1. 將樣式直接寫入 JS，確保一定會被載入
 const css = `
 #st-chats-jump-container {

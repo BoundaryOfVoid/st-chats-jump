@@ -4,23 +4,25 @@
     top: 50%;
     transform: translateY(-50%);
     display: flex;
-    flex-direction: column;
-    gap: 8px; /* 縮小按鈕之間的間距 */
+    flex-direction: row; /* 強制橫向排列 */
+    align-items: center; /* 確保按鈕垂直置中 */
+    gap: 8px;
     z-index: 99999;
-    background-color: rgba(20, 20, 20, 0.6); /* 增加底板，方便識別拖拉範圍 */
-    padding: 6px;
+    background-color: rgba(20, 20, 20, 0.6);
+    padding: 6px 10px; /* 橫向增加左右內邊距 */
     border-radius: 8px;
     border: 1px solid #444;
 }
 
 #drag-handle {
     cursor: grab;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #888;
-    font-size: 14px;
-    line-height: 1;
-    padding-bottom: 2px;
-    user-select: none; /* 防止被反白 */
+    font-size: 16px;
+    user-select: none;
+    padding-right: 4px; /* 與右邊按鈕拉開一點距離 */
 }
 
 #drag-handle:hover {
@@ -28,10 +30,10 @@
 }
 
 #st-chats-jump-container button {
-    width: 32px; /* 從 45px 縮小 */
-    height: 32px; /* 從 45px 縮小 */
+    width: 32px;
+    height: 32px;
     border-radius: 6px;
-    font-size: 14px; /* 從 20px 縮小 */
+    font-size: 14px;
     cursor: pointer;
     background-color: rgba(60, 60, 60, 0.8);
     color: #ffffff;

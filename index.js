@@ -1,77 +1,88 @@
-console.log('[st-chats-jump] 腳本已更新：修正定位邏輯與新增拖拉功能！');
+console.log('[st-chats-jump] 腳本已更新：改為橫向排列與 ID 精準跳轉！');
 
-// 1. 建立並插入按鈕 UI，新增拖拉握把 (drag-handle)
 const jumpContainer = document.createElement('div');
 jumpContainer.id = 'st-chats-jump-container';
 jumpContainer.innerHTML = `
-    <div id="drag-handle" title="拖拉移動">⠿</div>
-    <button id="jump-up-btn" title="上一則">▲</button>
-    <button id="jump-down-btn" title="下一則">▼</button>
+    <div id="drag-handle" title="拖拉移動">⋮⋮</div>
+    <button id="jump-up-btn" title="上一則 (ID-1)">▲</button>
+    <button id="jump-down-btn" title="下一則 (ID+1)">▼</button>
 `;
 document.body.appendChild(jumpContainer);
 
-// 2. 跳轉邏輯
-let currentIndex = -1;
-
-function getMessages() {
-    // 嚴格過濾：只抓取真實顯示在畫面上的 .mes 區塊，排除隱藏狀態
-    return Array.from(document.querySelectorAll('.mes')).filter(mes => mes.offsetParent !== null);
-}
+let currentMesId = -1;
 
 function jumpToMessage(direction) {
-    const messages = getMessages();
-    if (messages.length === 0) return;
     const chatContainer = document.getElementById('chat');
+    if (!chatContainer) return;
 
-    if (currentIndex < 0 || currentIndex >= messages.length) {
-        let closest = 0;
+    // 1. 如果目前沒有鎖定的 ID，先精算畫面中央的訊息 ID
+    if (currentMesId === -1) {
+        // 只抓取帶有 mesid 屬性且目前有顯示的區塊
+        const messages = Array.from(document.querySelectorAll('.mes')).filter(m => m.offsetParent !== null && m.hasAttribute('mesid'));
+        if (messages.length === 0) return;
+
+        let closestId = parseInt(messages[0].getAttribute('mesid'), 10);
         let minDistance = Infinity;
-        // 改以「視窗中心點」為準
         const windowCenter = window.innerHeight / 2;
         
-        messages.forEach((mes, index) => {
+        messages.forEach(mes => {
             const rect = mes.getBoundingClientRect();
-            // 計算該則訊息的垂直中心點
             const mesCenter = rect.top + (rect.height / 2);
             const distance = Math.abs(mesCenter - windowCenter);
             if (distance < minDistance) {
                 minDistance = distance;
-                closest = index;
+                closestId = parseInt(mes.getAttribute('mesid'), 10);
             }
         });
-        currentIndex = closest;
+        currentMesId = closestId;
     }
 
-    if (direction === 'up') {
-        currentIndex--;
-        if (currentIndex < 0) {
-            if (chatContainer) chatContainer.scrollTop = 0;
-            currentIndex = -1;
-            return;
-        }
-    } else if (direction === 'down') {
-        currentIndex++;
-        if (currentIndex >= messages.length) {
-            currentIndex = messages.length - 1;
-        }
+    // 2. 嚴格依據 ID 進行加減
+    let targetId = direction === 'up' ? currentMesId - 1 : currentMesId + 1;
+    
+    // 如果目標 ID 小於 0，代表已經在最頂端，嘗試觸發歷史載入
+    if (targetId < 0) {
+        chatContainer.scrollTop = 0;
+        currentMesId = -1;
+        return;
     }
 
-    if (messages[currentIndex]) {
-        messages[currentIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // 3. 尋找目標 ID 的 DOM 元素
+    let targetMes = document.querySelector(`.mes[mesid="${targetId}"]`);
+    
+    // 防呆機制：如果該 ID 被刪除了或隱藏了，繼續往下/上找一個最近的
+    while (targetMes && targetMes.offsetParent === null) {
+        targetId = direction === 'up' ? targetId - 1 : targetId + 1;
+        targetMes = document.querySelector(`.mes[mesid="${targetId}"]`);
+    }
+
+    if (targetMes) {
+        // 執行精準跳轉
+        targetMes.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        currentMesId = targetId; // 記錄跳轉後的 ID，供下次點擊使用
+    } else {
+        // 如果 DOM 裡找不到該 ID
+        if (direction === 'up') {
+            chatContainer.scrollTop = 0; // 置頂以載入更多歷史
+            currentMesId = -1;
+        } else {
+            currentMesId = -1; // 到底了，重置狀態
+        }
     }
 }
 
-// 3. 綁定按鈕與滾動事件
+// 綁定點擊事件
 document.getElementById('jump-up-btn').addEventListener('click', () => jumpToMessage('up'));
 document.getElementById('jump-down-btn').addEventListener('click', () => jumpToMessage('down'));
 
+// 滾動時重置 ID 鎖定
 window.addEventListener('scroll', (e) => {
     if (e.target && e.target.id === 'chat') {
-        currentIndex = -1;
+        currentMesId = -1;
     }
 }, { passive: true, capture: true });
 
-// 4. 拖拉功能實作
+// 拖拉邏輯
 const handle = document.getElementById('drag-handle');
 let isDragging = false;
 let startX, startY, initialLeft, initialTop;
@@ -80,15 +91,11 @@ handle.addEventListener('mousedown', (e) => {
     isDragging = true;
     startX = e.clientX;
     startY = e.clientY;
-    
-    // 取得當前容器的物理座標
     const rect = jumpContainer.getBoundingClientRect();
     initialLeft = rect.left;
     initialTop = rect.top;
-    
     handle.style.cursor = 'grabbing';
     
-    // 解除原本 CSS 的 fixed 置中限制，轉換為絕對座標以跟隨滑鼠
     jumpContainer.style.right = 'auto';
     jumpContainer.style.bottom = 'auto';
     jumpContainer.style.top = initialTop + 'px';
@@ -98,7 +105,7 @@ handle.addEventListener('mousedown', (e) => {
 
 document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
-    e.preventDefault(); // 防止拖拉時誤反白文字
+    e.preventDefault();
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
     jumpContainer.style.left = (initialLeft + dx) + 'px';

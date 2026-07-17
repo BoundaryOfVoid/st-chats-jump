@@ -1,4 +1,4 @@
-console.log('[st-chats-jump] 腳本已更新：修正長對話座標誤判問題！');
+console.log('[st-chats-jump] 腳本已更新：修正長對話閱讀視角 (改為對齊頂端)！');
 
 const jumpContainer = document.createElement('div');
 jumpContainer.id = 'st-chats-jump-container';
@@ -29,8 +29,6 @@ function jumpToMessage(direction) {
     if (currentIndex === -1) {
         const windowCenter = window.innerHeight / 2;
         
-        // 找出「頂部座標」高於「畫面中心點」的最後一個元素。
-        // 這能完美對應人類閱讀長文時的視線焦點，徹底排除長度干擾。
         visibleMessages.forEach((mes, index) => {
             const rect = mes.getBoundingClientRect();
             if (rect.top < windowCenter) {
@@ -38,7 +36,6 @@ function jumpToMessage(direction) {
             }
         });
         
-        // 防呆：如果所有訊息都在畫面下半部（例如剛載入時），就抓第一則
         if (currentIndex === -1) currentIndex = 0;
     }
 
@@ -49,17 +46,17 @@ function jumpToMessage(direction) {
         currentIndex++;
     }
 
-    // 5. 執行跳轉與邊界處理
+    // 5. 執行跳轉與邊界處理，將 block: 'center' 全數改為 block: 'start'
     if (currentIndex < 0) {
-        chatContainer.scrollTop = 0; // 已經到頂，觸發酒館載入歷史
+        chatContainer.scrollTop = 0; 
         currentMesId = null;
     } else if (currentIndex >= visibleMessages.length) {
-        currentIndex = visibleMessages.length - 1; // 到底了，鎖定在最新一則
-        visibleMessages[currentIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        currentIndex = visibleMessages.length - 1; 
+        visibleMessages[currentIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
         currentMesId = visibleMessages[currentIndex].getAttribute('mesid');
     } else {
-        visibleMessages[currentIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
-        currentMesId = visibleMessages[currentIndex].getAttribute('mesid'); // 記錄成功跳轉的 ID
+        visibleMessages[currentIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        currentMesId = visibleMessages[currentIndex].getAttribute('mesid');
     }
 }
 

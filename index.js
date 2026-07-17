@@ -101,3 +101,31 @@ document.addEventListener('mouseup', () => {
         handle.style.cursor = 'grab';
     }
 });
+
+// ==========================================
+// 擴充功能更新監聽器 (模擬酒館助手的重新載入通知)
+// ==========================================
+document.addEventListener('click', (e) => {
+    // 1. 確認點擊的目標是否為按鈕 (或按鈕內的圖示)
+    const targetButton = e.target.closest('.menu_button');
+    if (!targetButton) return;
+
+    // 2. 往上尋找該按鈕所屬的擴充功能列
+    // 酒館的擴充功能列通常包在具有特定結構的 div 中，我們用文字內容來精準定位
+    const extensionRow = targetButton.closest('.flex-container') || targetButton.parentElement.parentElement;
+    
+    if (extensionRow && extensionRow.textContent.includes('ST Chats Jump')) {
+        // 3. 確認點擊的是「更新」按鈕 (判斷是否包含 Git 分支圖示)
+        if (targetButton.querySelector('.fa-code-branch') || targetButton.classList.contains('fa-code-branch') || targetButton.innerHTML.includes('fa-code-branch')) {
+            
+            // 4. 攔截到更新動作！設定 2 秒延遲，讓後端伺服器有時間完成 git pull
+            setTimeout(() => {
+                toastr.info(
+                    `ST Chats Jump 已在背景更新完成。<br><a href="#" onclick="location.reload(); return false;" style="text-decoration: underline; cursor: pointer; color: #fff; font-weight: bold;">Click here to reload immediately</a>`,
+                    '擴充功能更新',
+                    { escapeHtml: false, timeOut: 15000, extendedTimeOut: 5000 }
+                );
+            }, 2000);
+        }
+    }
+});

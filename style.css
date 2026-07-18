@@ -50,3 +50,13 @@
 #st-chats-jump-container button:hover {
     background-color: rgba(100, 100, 100, 0.8);
 }
+
+/* === 平板與手機版優化 (寬度小於 1024px) === */
+@media screen and (max-width: 1024px) {
+    #st-chats-jump-container {
+        top: auto;          /* 廢除原本的上方對齊 */
+        bottom: 20%;        /* 改為錨定在距離底部 20% 的位置 */
+        transform: none;    /* 解除垂直置中的偏移干擾 */
+        right: 15px;
+    }
+}

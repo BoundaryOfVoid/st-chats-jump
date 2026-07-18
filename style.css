@@ -1,10 +1,13 @@
+/* ==========================================
+   ST Chats Jump - 核心樣式
+========================================== */
 #st-chats-jump-container {
     position: fixed;
     right: 20px;
     top: 50%;
     transform: translateY(-50%);
     display: flex;
-    flex-direction: column; /* 改回直立排列 */
+    flex-direction: column;
     align-items: center;
     gap: 8px;
     z-index: 99999;
@@ -22,7 +25,7 @@
     color: #888;
     font-size: 16px;
     user-select: none;
-    transform: rotate(90deg); /* 將直排 6 點翻轉為橫排 */
+    transform: rotate(90deg); 
     width: 16px;
     height: 16px;
     margin-bottom: 2px;
@@ -51,12 +54,17 @@
     background-color: rgba(100, 100, 100, 0.8);
 }
 
-/* === 平板與手機版優化 (寬度小於 1024px) === */
+/* ==========================================
+   平板與手機版安全定位 (螢幕寬度小於 1024px)
+========================================== */
 @media screen and (max-width: 1024px) {
     #st-chats-jump-container {
-        top: auto;          /* 廢除原本的上方對齊 */
-        bottom: 20%;        /* 改為錨定在距離底部 20% 的位置 */
-        transform: none;    /* 解除垂直置中的偏移干擾 */
-        right: 15px;
+        /* 強制覆寫上方置中屬性，改為錨定右下方 */
+        top: auto !important;
+        transform: none !important;
+        
+        /* 使用絕對像素避開行動裝置 Viewport 計算盲點 */
+        bottom: 120px !important; 
+        right: 10px !important;
     }
 }

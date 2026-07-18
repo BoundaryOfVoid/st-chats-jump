@@ -1,4 +1,4 @@
-console.log('[st-chats-jump] 腳本已更新：無狀態視覺運算 + 觸控邊界防呆 + 更新通知攔截');
+console.log('[st-chats-jump] 腳本已更新：無狀態視覺運算 + 觸控邊界防呆 + 最高權限更新攔截');
 
 // ==========================================
 // 1. 建立並插入按鈕 UI
@@ -157,28 +157,31 @@ document.addEventListener('touchend', dragEnd);
 
 
 // ==========================================
-// 4. 擴充功能更新監聽器 (模擬酒館助手的重新載入通知)
+// 4. 擴充功能更新監聽器 (最高權限攔截)
 // ==========================================
 document.addEventListener('click', (e) => {
-    // 1. 確認點擊的目標是否為按鈕
-    const targetButton = e.target.closest('.menu_button');
-    if (!targetButton) return;
+    // 尋找滑鼠點擊的最近的區塊
+    const clickedElement = e.target.closest('div, button, i, span');
+    if (!clickedElement) return;
 
-    // 2. 往上尋找該按鈕所屬的擴充功能列
-    const extensionRow = targetButton.closest('.flex-container') || targetButton.parentElement.parentElement;
+    // 確認是否點擊了帶有分支圖示 (更新) 的按鈕
+    const isUpdate = clickedElement.classList.contains('fa-code-branch') || 
+                     clickedElement.querySelector('.fa-code-branch') || 
+                     clickedElement.closest('.fa-code-branch');
+
+    if (!isUpdate) return;
+
+    // 往上尋找該按鈕所屬的擴充功能列
+    const extensionRow = clickedElement.closest('.flex-container') || clickedElement.parentElement.parentElement;
     
+    // 如果確認是 ST Chats Jump 的更新按鈕
     if (extensionRow && extensionRow.textContent.includes('ST Chats Jump')) {
-        // 3. 確認點擊的是「更新」按鈕 (判斷是否包含 Git 分支圖示)
-        if (targetButton.querySelector('.fa-code-branch') || targetButton.classList.contains('fa-code-branch') || targetButton.innerHTML.includes('fa-code-branch')) {
-            
-            // 4. 攔截到更新動作！設定 2 秒延遲讓後端 pull
-            setTimeout(() => {
-                toastr.info(
-                    `ST Chats Jump 已在背景更新完成。<br><a href="#" onclick="location.reload(); return false;" style="text-decoration: underline; cursor: pointer; color: #fff; font-weight: bold;">Click here to reload immediately</a>`,
-                    '擴充功能更新',
-                    { escapeHtml: false, timeOut: 15000, extendedTimeOut: 5000 }
-                );
-            }, 2000);
-        }
+        setTimeout(() => {
+            toastr.info(
+                `ST Chats Jump 已在背景更新完成。<br><a href="#" onclick="location.reload(); return false;" style="text-decoration: underline; cursor: pointer; color: #fff; font-weight: bold;">Click here to reload immediately</a>`,
+                '擴充功能更新',
+                { escapeHtml: false, timeOut: 15000, extendedTimeOut: 5000 }
+            );
+        }, 1500); // 1.5秒後彈出，避開按鈕本身的動畫卡頓
     }
-});
+}, { capture: true });

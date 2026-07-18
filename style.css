@@ -53,18 +53,3 @@
 #st-chats-jump-container button:hover {
     background-color: rgba(100, 100, 100, 0.8);
 }
-
-/* ==========================================
-   平板與手機版安全定位 (螢幕寬度小於 1024px)
-========================================== */
-@media screen and (max-width: 1024px) {
-    #st-chats-jump-container {
-        /* 強制覆寫上方置中屬性，改為錨定右下方 */
-        top: auto !important;
-        transform: none !important;
-        
-        /* 使用絕對像素避開行動裝置 Viewport 計算盲點 */
-        bottom: 120px !important; 
-        right: 10px !important;
-    }
-}

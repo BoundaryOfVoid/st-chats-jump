@@ -185,3 +185,28 @@ document.addEventListener('click', (e) => {
         }, 1500); // 1.5秒後彈出，避開按鈕本身的動畫卡頓
     }
 }, { capture: true });
+
+// ==========================================
+// 5. 行動裝置強制初始化定位 (徹底避開 CSS 快取與衝突)
+// ==========================================
+setTimeout(() => {
+    // 偵測是否為平板或手機環境 (螢幕寬度小於 1024px)
+    if (window.innerWidth <= 1024) {
+        const rect = jumpContainer.getBoundingClientRect();
+        
+        // 取得容器長寬，若因載入延遲抓不到，給予預設安全值
+        const w = rect.width || 46; 
+        const h = rect.height || 100;
+        
+        // 強制計算絕對座標：位於畫面右方 15px，下方 120px 處
+        const initLeft = window.innerWidth - w - 15;
+        const initTop = window.innerHeight - h - 120;
+        
+        // 拔除所有 CSS 的對齊限制，換成 JS 的絕對物理定位
+        jumpContainer.style.right = 'auto';
+        jumpContainer.style.bottom = 'auto';
+        jumpContainer.style.transform = 'none';
+        jumpContainer.style.left = initLeft + 'px';
+        jumpContainer.style.top = initTop + 'px';
+    }
+}, 1000); // 延遲 1 秒，確保酒館的其他 UI 都已經載入完畢，避免被擠掉

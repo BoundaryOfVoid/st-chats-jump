@@ -3,16 +3,13 @@
 ========================================== */
 #st-chats-jump-container {
     position: fixed;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
+    z-index: 99999;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    z-index: 99999;
+    gap: 4px; /* 縮小按鈕間距 */
     background-color: rgba(20, 20, 20, 0.6);
-    padding: 8px 6px;
+    padding: 6px 4px; /* 縮小外框留白 */
     border-radius: 8px;
     border: 1px solid #444;
 }
@@ -23,11 +20,11 @@
     align-items: center;
     justify-content: center;
     color: #888;
-    font-size: 16px;
+    font-size: 14px; /* 縮小拖拉點 */
     user-select: none;
     transform: rotate(90deg); 
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     margin-bottom: 2px;
 }
 
@@ -36,10 +33,10 @@
 }
 
 #st-chats-jump-container button {
-    width: 32px;
-    height: 32px;
+    width: 28px; /* 從 32px 縮小為 28px */
+    height: 28px; /* 從 32px 縮小為 28px */
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 12px; /* 縮小箭頭 */
     cursor: pointer;
     background-color: rgba(60, 60, 60, 0.8);
     color: #ffffff;
@@ -52,4 +49,24 @@
 
 #st-chats-jump-container button:hover {
     background-color: rgba(100, 100, 100, 0.8);
+}
+
+/* ==========================================
+   手機與平板版專屬微縮樣式 (寬度小於 768px)
+========================================== */
+@media screen and (max-width: 768px) {
+    #st-chats-jump-container {
+        padding: 4px 2px;
+        gap: 2px;
+    }
+    #st-chats-jump-container button {
+        width: 24px; /* 手機版進一步縮小至 24px */
+        height: 24px;
+        font-size: 10px;
+    }
+    #drag-handle {
+        width: 12px;
+        height: 12px;
+        font-size: 12px;
+    }
 }
